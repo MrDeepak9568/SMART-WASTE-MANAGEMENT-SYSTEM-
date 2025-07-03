@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block reportactive %}active{% endblock reportactive %}
+
+{% block title %}Report Waste{% endblock title %}
+
+{% block body %}
+
+{% block extracss %}
+<style>
+    .bg-image {
+        filter: blur(8px);
+        -webkit-filter: blur(8px);
+    }
+    
+    /* Container for the dropdown */
+    .dropdown {
+        position: relative;
+        width: 100%;
+    }
+
+    /* Input field styling */
+    .dropdown input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+    }
+
+    /* The dropdown box itself */
+    .suggestion-box {
+        position: absolute;
+        width: 100%;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none; /* Hidden by default */
+    }
+
+    /* Each suggestion item */
+    .suggestion-box div {
+        padding: 10px;
+        cursor: pointer;
+        background-color: white;
+    }
+
+    /* Hover effect for suggestions */
+    .suggestion-box div:hover {
+        background-color: #f0f0f0;
+    }
+    .upload-section .drop-zone {
+        border: 2px dashed green;
+        border-radius: 8px;
+        padding: 40px 20px;
+        cursor: pointer;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      
+      .upload-section .drop-zone:hover {
+        background-color: #f9f9f9;
+      }
+      
+      .upload-section .drop-zone input {
+        display: none;
+      }
+      
+      .upload-section .drop-zone-text {
+        color: gray;
+      }
+      
+      .upload-section .upload-button {
+        padding: 10px 20px;
+        background-color: #9aa9f8;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      
+      .upload-section .upload-button:disabled {
+        background-color: #c1c6f5;
+        cursor: not-allowed;
+      }
+      .hidden {
+        display: none;
+    }
+    #submitBtn {
+        color: black; /* or white if background is dark */
+    }
+    .verification-box {
+        background-color: #d0e8d0;
+        border-left: 5px solid #28a745;
+        padding: 20px 30px;
+        border-radius: 5px;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        width: 500px;
+        font-family: Arial, sans-serif;
+      }
+    
+      .verification-box h2 {
+        color: #1e4620;
+        margin-top: 0;
+        font-size: 1.3em;
+      }
+    
+      .checkmark {
+        color: #28a745;
+        font-weight: bold;
+        margin-right: 8px;
+      }
+    
+      .info {
+        margin-top: 10px;
+        color: #2d4f2d;
+        font-size: 1em;
+      }
+      .form-heading {
+        font-family: 'Arial', sans-serif; /* or match whatever your .drop-zone uses */
+        font-size: 1.2rem; /* adjust based on desired size */
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock extracss %}
+<div class="container bg-white p-4 rounded shadow" style="max-width: 1400px;">
+    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+        {% csrf_token %}
+        
+        <!-- Upload Section -->
+        <div class="upload-section" onclick="triggerFileInput()">
+            <div class="drop-zone">
+                <i class="fa fa-upload fa-4x upload-icon" aria-hidden="true"></i>
+                <br/>
+                <label for="imageInput" class="upload-label">
+                    <span class="upload-link">Upload a file</span><br>or drag and drop
+                </label>
+                <p class="upload-info">PNG, JPG, GIF up to 10MB</p>
+                <input type="file" id="imageInput" name="image" accept="image/*" onchange="previewImage(event)" hidden>
+            </div>
+        </div>
+    
+        <!-- Image Preview (optional) -->
+        <img id="preview" style="display:none; max-width: 100%; margin-top: 10px;"/>
+    
+        <!-- Verify Button -->
+        <button id="verifyBtn" class="verify-button" type="submit" disabled>
+            Verify Waste
+        </button>
+    </form>
+    
+
+    <br/>
+    
+    {% if show_result %}
+    <div class="verification-box">
+        <h2><span class="checkmark">✔</span> Verification Successful</h2>
+        <div class="info">Waste Type: {{ wasteType }}</div>
+        <div class="info">Quantity: {{ quantity }}</div>
+        <div class="info">Confidence: {{ confidence }}</div>
+    </div>
+    {% endif %}
+    
+    <form method="POST" >
+        {% csrf_token %}
+        <label class="block relative">
+            Waste Type:
+            <div>
+                <input type="text" name="waste_type" id="waste_type" value="{{ wasteType }}" class="disabled mt-1 border p-2 w-full rounded focus:outline-none focus:ring focus:border-blue-300" readonly>
+            </div>
+        </label>
+        <label class="block relative">
+            Estimate Amount:
+            <div>
+                <input type="text" name="estimate_amt" id="estimate_amt" value="{{ quantity }}" class="disabled mt-1 border p-2 w-full rounded focus:outline-none focus:ring focus:border-blue-300" readonly>
+            </div>
+        </label>
+
+        <label class="block relative">
+            Enter Location:
+            <div class="dropdown">
+                <input type="text" id="location" name="location" required autocomplete="off"
+                    class="mt-1 border p-2 w-full rounded focus:outline-none focus:ring focus:border-blue-300">
+                <div id="suggestions" class="suggestion-box"></div>
+            </div>
+        </label>
+        <button id="submitbtn" class="submitbtn" type="submit" >
+            Report
+        </button>
+    </form>
+    
+    
+
+    <script>
+        const locationInput = document.getElementById("location");
+        const suggestionBox = document.getElementById("suggestions");
+    
+        locationInput.addEventListener("input", async () => {
+            const query = locationInput.value.trim();
+            if (query.length < 3) {
+                suggestionBox.style.display = "none";
+                return;
+            }
+    
+            try {
+                const response = await fetch(`https://photon.komoot.io/api/?q=${query}&limit=5&lang=en`);
+                const data = await response.json();
+    
+                suggestionBox.innerHTML = "";
+                if (data.features.length === 0) {
+                    suggestionBox.style.display = "none";
+                    return;
+                }
+    
+                data.features.forEach((place) => {
+                    const name = place.properties.name || '';
+                    const city = place.properties.city || '';
+                    const country = place.properties.country || '';
+                    
+                    // Build the location string conditionally
+                    let locationText = name;
+                    if (city) {
+                        locationText += `, ${city}`;
+                    }
+                    if (country) {
+                        locationText += `, ${country}`;
+                    }
+    
+                    const div = document.createElement("div");
+                    div.textContent = locationText;
+                    div.className = "cursor-pointer";
+                    div.addEventListener("click", () => {
+                        locationInput.value = div.textContent;
+                        suggestionBox.style.display = "none"; // Close the dropdown after selection
+                    });
+                    suggestionBox.appendChild(div);
+                });
+    
+                suggestionBox.style.display = "block"; // Show the dropdown
+    
+            } catch (error) {
+                console.error("Location fetch failed:", error);
+                suggestionBox.style.display = "none"; // Hide the dropdown in case of error
+            }
+        });
+    
+        document.addEventListener("click", (e) => {
+            // Close the dropdown if clicked outside of the input or suggestions box
+            if (!locationInput.contains(e.target) && !suggestionBox.contains(e.target)) {
+                suggestionBox.style.display = "none";
+            }
+        });
+    function triggerFileInput() {
+        document.getElementById('imageInput').click();
+    }
+    function previewImage(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById("preview");
+        const verifyBtn = document.getElementById("verifyBtn");
+
+        if (file && file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+    
+            
+            verifyBtn.disabled = false;
+            verifyBtn.classList.add("enabled"); // optional, for styling
+        } else {
+            preview.style.display = "none";
+            verifyBtn.disabled = true;
+            verifyBtn.classList.remove("enabled");
+        }
+    }   
+    verifyBtn.addEventListener("click", function () {
+        submitbtn.disabled = false; // Enable submit button
+    });
+            
+    </script>
+    
+</div>
+
+{% endblock body %}

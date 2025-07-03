@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block homeactive %}active{% endblock homeactive %}
+
+{% block title %}Smart Waste Management System{% endblock title %}
+
+{% block body %}
+
+{% block extracss %}
+<style>
+    .bg-image{
+        filter: blur(8px);
+    -webkit-filter: blur(8px);
+}
+</style>
+{% endblock extracss %}
+<div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+    <div class="container bg-white p-4 rounded shadow" style="max-width: 1400px;">
+        <center>
+            <h1>Welcome to Smart Waste Managemnet System</h1>
+        </center>
+    </div>
+</div>
+
+{%endblock body%}

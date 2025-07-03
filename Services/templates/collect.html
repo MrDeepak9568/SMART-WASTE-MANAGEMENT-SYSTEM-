@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block collectactive %}active{% endblock collectactive %}
+
+{% block title %}Collect Rewards{% endblock title %}
+
+{% block body %}
+
+{% block extracss %}
+<style>
+    .bg-image{
+        filter: blur(8px);
+    -webkit-filter: blur(8px);
+}
+</style>
+{% endblock extracss %}
+
+<div class="container">
+    <h2>Waste Reports</h2>
+
+    {% if waste_reports %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Waste Type</th>
+                    <th>Estimate Amount</th>
+                    <th>Location</th>
+                    <th>Date Reported</th>
+                    <th>Collected</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in waste_reports %}
+                    <tr>
+                        <td>{{ report.waste_type }}</td>
+                        <td>{{ report.estimate_amt }}</td>
+                        <td>{{ report.location }}</td>
+                        <td>{{ report.date_reported|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            {% if report.collected %}
+                                ✅ Collected
+                            {% else %}
+                            <form method="POST" enctype="multipart/form-data" action="{% url 'mark_collected' report.id %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="proof">Upload Proof Image:</label>
+                                    <input type="file" name="proof" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-success mt-2">Submit</button>
+                            </form>
+                            
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No waste reports found.</p>
+    {% endif %}
+</div>
+
+{% endblock body %}

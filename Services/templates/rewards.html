@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block rewardsactive %}active{% endblock rewardsactive %}
+
+{% block title %}Rewards{% endblock title %}
+
+{% block body %}
+
+{% block extracss %}
+<style>
+    .bg-image{
+        filter: blur(8px);
+    -webkit-filter: blur(8px);
+    }
+</style>
+{% endblock extracss %}
+<div class="container bg-white p-4 rounded shadow" style="max-width: 1400px;">
+
+    <div class="container mt-5">
+        <h2 class="mb-4">Reward Transaction History</h2>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>S.No</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Reason</th>
+                                <th>Date & Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if transactions %}
+                                {% for tx in transactions %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            {% if tx.transaction_type == 'add' %}
+                                                <span class="text-success">+{{ tx.amount }}</span>
+                                            {% else %}
+                                                <span class="text-danger">-{{ tx.amount }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if tx.transaction_type == 'add' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ tx.get_transaction_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ tx.reason|default:"—" }}</td>
+                                        <td>{{ tx.timestamp|date:"M d, Y H:i" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">No reward transactions found.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock body %}
