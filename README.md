@@ -1,6 +1,6 @@
 # SMART-WASTE-MANAGEMENT-SYSTEM-
 This mini project was part of my college curriculum during the second semester of my third year.
-
+As team leader, I was responsible for the majority of the technical and developmental tasks, ensuring timely delivery and functionality of the Smart Waste Management System.
 Smart Waste Management System uses HTML, CSS, JS, and Django to enable citizens to report waste via images and AI-based verification. Features include real-time tracking, gamified rewards, and admin dashboards—promoting cleaner cities through tech and community engagement.
 
 🧠 Smart Waste Management System
